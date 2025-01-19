@@ -30,19 +30,19 @@ class HuggingFaceModel:
         else:
             model_kwargs = {"attn_implementation": "flash_attention_2"}
         
-        try:
-            self.pipeline = pipeline(
-                "text-generation",
-                model=name_or_path,
-                tokenizer=self.tokenizer,
-                trust_remote_code=True,
-                device_map="auto",
-                torch_dtype=torch.bfloat16,
-                model_kwargs=model_kwargs,
-            )
-        except:
-            self.pipeline = None
-            self.model = AutoModelForCausalLM.from_pretrained(name_or_path, trust_remote_code=True, device_map="auto", torch_dtype=torch.bfloat16,)
+        #try:
+        #    self.pipeline = pipeline(
+        #        "text-generation",
+        #        model=name_or_path,
+        #        tokenizer=self.tokenizer,
+        #        trust_remote_code=True,
+        #        device_map="auto",
+        #        torch_dtype=torch.bfloat16,
+        #        model_kwargs=model_kwargs,
+        #    )
+        #except:
+        self.pipeline = None
+        self.model = AutoModelForCausalLM.from_pretrained(name_or_path, trust_remote_code=True, device_map="auto", torch_dtype=torch.bfloat16,)
             
         self.generation_kwargs = generation_kwargs
         self.stop = self.generation_kwargs.pop('stop')

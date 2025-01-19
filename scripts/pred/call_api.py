@@ -43,7 +43,8 @@ from tqdm import tqdm
 from pathlib import Path
 import traceback
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest
-from usa_llama import convert_usa,load_usa
+from usa_llama import convert_usa,load_usa_llama
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 
 
 SERVER_TYPES = (
@@ -180,7 +181,7 @@ def get_llm(tokens_to_generate):
             stop=args.stop_words,
             max_new_tokens=tokens_to_generate,
         )
-        if args.use_usa:
+        if True:
             config = AutoConfig.from_pretrained(args.model_name_or_path)
             config.lth_init_dim = 128
             config.lth_final_dim = 32
@@ -190,8 +191,9 @@ def get_llm(tokens_to_generate):
             config.recent_budget =128
             config.usa_retrieve_depth = 6
             config.usa_eval_mode = "simple"
-            usa_modules = load_usa_llama(config, args.load_usa)
-            model = convert_usa(model, config, usa_modules, collect_stats = args.collect_stats, train_usa=args.train_usa)
+            config.head_dim = 128
+            usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.16K.20.500.pt")
+            llm.model = convert_usa(llm.model, config, usa_modules, collect_stats=False, train_usa=False)
 
 
     
