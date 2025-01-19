@@ -16,12 +16,7 @@ TEMPERATURE="0.0" # greedy
 TOP_P="1.0"
 TOP_K="32"
 SEQ_LENGTHS=(
-    131072
-    65536
-    32768
     16384
-    8192
-    4096
 )
 
 MODEL_SELECT() {
@@ -36,9 +31,9 @@ MODEL_SELECT() {
             MODEL_FRAMEWORK="vllm"
             ;;
         llama3.1-8b-chat)
-            MODEL_PATH="${MODEL_DIR}/llama3.1-8b-Instruct"
+            MODEL_PATH="meta-llama/Llama-3.1-8B-Instruct"
             MODEL_TEMPLATE_TYPE="meta-llama3"
-            MODEL_FRAMEWORK="vllm"
+            MODEL_FRAMEWORK="hf"
             ;;
         jamba1.5-mini)
             MODEL_PATH="${MODEL_DIR}/Jamba-1.5-Mini"

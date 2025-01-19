@@ -43,6 +43,8 @@ from tqdm import tqdm
 from pathlib import Path
 import traceback
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest
+from usa_llama import convert_usa,load_usa
+
 
 SERVER_TYPES = (
     'trtllm',
@@ -178,6 +180,20 @@ def get_llm(tokens_to_generate):
             stop=args.stop_words,
             max_new_tokens=tokens_to_generate,
         )
+        if args.use_usa:
+            config = AutoConfig.from_pretrained(args.model_name_or_path)
+            config.lth_init_dim = 128
+            config.lth_final_dim = 32
+            config.lth_thold = 0
+            config.init_budget = 128
+            config.heavy_budget = 1./32
+            config.recent_budget =128
+            config.usa_retrieve_depth = 6
+            config.usa_eval_mode = "simple"
+            usa_modules = load_usa_llama(config, args.load_usa)
+            model = convert_usa(model, config, usa_modules, collect_stats = args.collect_stats, train_usa=args.train_usa)
+
+
     
     elif args.server_type == 'mamba':
         from model_wrappers import MambaModel
