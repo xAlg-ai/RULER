@@ -187,12 +187,13 @@ def get_llm(tokens_to_generate):
             config.lth_final_dim = 32
             config.lth_thold = 0
             config.init_budget = 128
-            config.heavy_budget = 1./32
+            config.heavy_budget = 1./16
             config.recent_budget =128
             config.usa_retrieve_depth = 6
             config.usa_eval_mode = "simple"
             config.head_dim = 128
             usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.16K.20.500.pt")
+            #usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.scaledbeta.pt")
             llm.model = convert_usa(llm.model, config, usa_modules, collect_stats=False, train_usa=False)
 
 
@@ -213,7 +214,7 @@ def get_llm(tokens_to_generate):
         
     else:
         raise RuntimeError(f'Unsupported server type {args.server_type}')
-
+    print(llm.model, flush=True)
     return llm
 
 
