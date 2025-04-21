@@ -45,7 +45,7 @@ import traceback
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest
 from usa_llama import convert_usa,load_usa_llama
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
-
+from doublesparse_llama import convert_kvcache_heavy_recent, convert_channel_config
 
 SERVER_TYPES = (
     'trtllm',
@@ -91,6 +91,13 @@ parser.add_argument("--stop_words", type=str, default='')
 parser.add_argument("--sliding_window_size", type=int)
 parser.add_argument("--threads", type=int, default=4)
 parser.add_argument("--batch_size", type=int, default=1)
+
+parser.add_argument("--use_usa", action="store_true")
+parser.add_argument("--use_ds", action="store_true")
+parser.add_argument("--sparsity", type=float, default=1.0)
+parser.add_argument("--ds_bits", type=int, default=2)
+parser.add_argument("--ds_channels", type=int, default=16)
+
 
 args = parser.parse_args()
 args.stop_words = list(filter(None, args.stop_words.split(',')))
@@ -181,22 +188,40 @@ def get_llm(tokens_to_generate):
             stop=args.stop_words,
             max_new_tokens=tokens_to_generate,
         )
-        if True:
+        if args.use_usa:
+            print("using usa")
             config = AutoConfig.from_pretrained(args.model_name_or_path)
             config.lth_init_dim = 128
             config.lth_final_dim = 32
             config.lth_thold = 0
             config.init_budget = 128
-            config.heavy_budget = 1./16
+            config.heavy_budget = args.sparsity
             config.recent_budget =128
             config.usa_retrieve_depth = 6
             config.usa_eval_mode = "simple"
             config.head_dim = 128
-            usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.16K.20.500.pt")
+            usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.32K.20.500.pt")
             #usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.scaledbeta.pt")
             llm.model = convert_usa(llm.model, config, usa_modules, collect_stats=False, train_usa=False)
+        if args.use_ds:
+            print("using ds")
+            channel_path = "/workspace/RULER/DoubleSparse/config/"+args.model_name_or_path+".json"
+            config = AutoConfig.from_pretrained(args.model_name_or_path)
+            channel_config = None
+            config.head_dim = 128
+            with open(channel_path, "r") as f:
+                token_budget = args.sparsity
+                ds_num_channels = args.ds_channels
+                ds_label_bits = args.ds_bits
+                edge_budget = 128
 
-
+                channel_config = json.load(f)
+                llm.model = convert_kvcache_heavy_recent(llm.model, config, heavy_const=token_budget, 
+                        group_factor=128//ds_num_channels, label_bits=ds_label_bits, init_const=edge_budget, local_const=edge_budget,
+                        collect_stats=False)
+                #group_factor = 8 => sorted channels = 128 / 8
+                #label_bits = 16 # no quantization ; 4 => 4 bit quantization
+                llm.model = convert_channel_config(llm.model, channel_config, "q")
     
     elif args.server_type == 'mamba':
         from model_wrappers import MambaModel
