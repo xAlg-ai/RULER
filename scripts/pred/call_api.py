@@ -43,7 +43,7 @@ from tqdm import tqdm
 from pathlib import Path
 import traceback
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest
-from usa_llama import convert_usa,load_usa_llama
+from hashattention_research.hashattention_llama import convert_usa,load_usa
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 from doublesparse_llama import convert_kvcache_heavy_recent, convert_channel_config
 
@@ -95,6 +95,8 @@ parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--use_usa", action="store_true")
 parser.add_argument("--use_ds", action="store_true")
 parser.add_argument("--sparsity", type=float, default=1.0)
+parser.add_argument("--sampling_budget", type=float, default=0)
+parser.add_argument("--hat_sampling", action="store_true", default=False)
 parser.add_argument("--ds_bits", type=int, default=2)
 parser.add_argument("--ds_channels", type=int, default=16)
 
@@ -200,7 +202,10 @@ def get_llm(tokens_to_generate):
             config.usa_retrieve_depth = 6
             config.usa_eval_mode = "simple"
             config.head_dim = 128
-            usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.32K.20.500.pt")
+            config.sampling_budget = args.sampling_budget
+            config.hat_sampling = args.hat_sampling
+            config.lth_num_layers = 3
+            usa_modules = load_usa(config, "/workspace/HashAttention/hashattention1.0/eval/RULER/scripts/clean_usa.32K.20.500.pt")
             #usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.scaledbeta.pt")
             llm.model = convert_usa(llm.model, config, usa_modules, collect_stats=False, train_usa=False)
         if args.use_ds:
