@@ -19,6 +19,8 @@ SEQ_LENGTHS=(
     4096
 )
 
+echo "MAKE SURE THAT UTILS is COPIED >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> "
+
 MODEL_SELECT() {
     MODEL_NAME=$1
     MODEL_DIR=$2
