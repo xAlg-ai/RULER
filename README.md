@@ -13,10 +13,10 @@ sudo docker run -it --mount src=/home/ubuntu/hashattention1.0,target=/workspace/
 
 4. Download the hashAttention patch (#TODO push to hub)
 ```
-	git lfs the artifacts
+	should be already present in hashattention1.0/artifacts/ ; if not they are managed using git-lfs
 ```
 
-5. Clone and/or Install HashAttention (#TODO host with pip)
+5. Clone and/or Install HashAttention
 cd  /workspace/HashAttention
 pip install -e .
 
