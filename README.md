@@ -1,3 +1,51 @@
+# Running RULER with HashAttention
+
+
+2. Install docker for RULER
+```
+sudo docker pull cphsieh/ruler:0.2.0
+```
+
+3. Start docker
+```
+sudo docker run -it --mount src=/home/ubuntu/hashattention1.0,target=/workspace/HashAttention,type=bind --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 7f18f7a1f344
+```
+
+4. Download the hashAttention patch (#TODO push to hub)
+```
+	git lfs the artifacts
+```
+
+5. Clone and/or Install HashAttention (#TODO host with pip)
+cd  /workspace/HashAttention
+pip install -e .
+
+
+6. Download data
+```
+cd HashAttention/eval/RULER/scripts/data/synthetic/json/
+python3 download_paulgraham_essay.py
+bash download_qa_dataset.sh
+```
+
+7. [Important] !! Update the utils to perform offset while evaluating (See paper for why we need offsets)
+```
+cd  /workspace/HashAttention/eval/RULER/scripts/
+cp utils.py /usr/local/lib/python3.10/dist-packages/transformers/generation/utils.py
+```
+8. Evaluate
+```
+cd  /workspace/HashAttention/eval/RULER/scripts/
+bash /hashattention_scripts/script_ha_16x.sh  llama3.1-8b-chat synthetic
+```
+
+
+
+
+
+
+# Below is the original README for RULER.
+
 # 📏 RULER: What’s the Real Context Size of Your Long-Context Language Models?
 
 This repository contains code for our paper [RULER: What’s the Real Context Size of Your Long-Context Language Models](https://arxiv.org/abs/2404.06654). RULER generates synthetic examples to evaluate long-context language models with configurable sequence length and task complexity. We benchmark 17 open-source models across 4 task categories (in total 13 tasks) in RULER, evaluating long-context capabilities beyond simple in-context recall. Here are our main results.
