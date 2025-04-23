@@ -43,7 +43,8 @@ from tqdm import tqdm
 from pathlib import Path
 import traceback
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest
-from hashattention_research.hashattention_llama import convert_usa,load_usa
+#from hashattention_research.hashattention_llama import convert_usa,load_usa
+from hashattention.hashattention_llama import convert_usa,load_usa
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 from doublesparse_llama import convert_kvcache_heavy_recent, convert_channel_config
 
