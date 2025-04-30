@@ -22,13 +22,17 @@ if [ $# -ne 2 ]; then
 fi
 
 
+LAYER=${LAYER}
+FACTOR=${FACTOR}
 # Root Directories
 GPUS="1" # GPU size for tensor_parallel.
-ROOT_DIR="x.benchmark_hat_sampling_0.5_16x" # the path that stores generated task samples and model predictions.
+ROOT_DIR="benchmark_hat_${FACTOR}x_sampling_layer_$LAYER" # the path that stores generated task samples and model predictions.
 MODEL_DIR="../.." # the path that contains individual model folders from HUggingface.
 ENGINE_DIR="." # the path that contains individual engine folders from TensorRT-LLM.
 BATCH_SIZE=1  # increase to improve GPU utilization
-SPARSE_PARAMS=" --use_usa --sparsity 0.03125 --sampling_budget 0.03125 --hat_sampling"
+SPARSE_PARAMS=" --use_usa --sparsity $(echo 1/$FACTOR/2 | bc -l) --sampling_budget $(echo 1/$FACTOR/2 | bc -l) --sampling_layer_cap $LAYER"
+echo "Sparse params"
+echo $SPARSE_PARAMS
 
 # Model and Tokenizer
 source config_models.sh

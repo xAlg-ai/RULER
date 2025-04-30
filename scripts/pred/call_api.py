@@ -43,7 +43,6 @@ from tqdm import tqdm
 from pathlib import Path
 import traceback
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest
-#from hashattention_research.hashattention_llama import convert_usa,load_usa
 from hashattention.hashattention_llama import convert_usa,load_usa
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 from doublesparse_llama import convert_kvcache_heavy_recent, convert_channel_config
@@ -98,6 +97,7 @@ parser.add_argument("--use_ds", action="store_true")
 parser.add_argument("--sparsity", type=float, default=1.0)
 parser.add_argument("--sampling_budget", type=float, default=0)
 parser.add_argument("--hat_sampling", action="store_true", default=False)
+parser.add_argument("--sampling_layer_cap", type=int, default=-1)
 parser.add_argument("--ds_bits", type=int, default=2)
 parser.add_argument("--ds_channels", type=int, default=16)
 
@@ -205,8 +205,10 @@ def get_llm(tokens_to_generate):
             config.head_dim = 128
             config.sampling_budget = args.sampling_budget
             config.hat_sampling = args.hat_sampling
+            config.sampling_correlated = False
+            config.sampling_layer_cap = args.sampling_layer_cap
             config.lth_num_layers = 3
-            usa_modules = load_usa(config, "/workspace/HashAttention/hashattention1.0/eval/RULER/scripts/clean_usa.32K.20.500.pt")
+            usa_modules = load_usa(config, "/workspace/HashAttention/eval/RULER/scripts/clean_usa.32K.20.500.pt")
             #usa_modules = load_usa_llama(config, "/workspace/RULER/scripts/pred/clean_usa.scaledbeta.pt")
             llm.model = convert_usa(llm.model, config, usa_modules, collect_stats=False, train_usa=False)
         if args.use_ds:
@@ -228,7 +230,7 @@ def get_llm(tokens_to_generate):
                 #group_factor = 8 => sorted channels = 128 / 8
                 #label_bits = 16 # no quantization ; 4 => 4 bit quantization
                 llm.model = convert_channel_config(llm.model, channel_config, "q")
-    
+
     elif args.server_type == 'mamba':
         from model_wrappers import MambaModel
         # mamba uses its own generation function, do not pass in do_sample
